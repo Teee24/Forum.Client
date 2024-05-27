@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 
+// TODO: 顯示貼文
 const response = ref([])
 const allData = ref([])
 async function fetchData() {
@@ -8,41 +9,61 @@ async function fetchData() {
   const data = await res.json()
   response.value = data
   allData.value = response.value['returnData']
+
 }
+
 
 //TODO: 新增貼文
 // 貼文欄位
-// const entity = [category:'',
-// detail:'',
-// postDate:''
-// postId:''
-// publisher:''
-// title:'']
+const post = ref({category:'',
+detail:'',
+postDate:'',
+postId:'',
+publisher:'',
+title:''})
 
-async function created() {
-  // Simple POST request with a JSON body using fetch
-  const requestOptions = {
+const exampleModal=ref(null)
+
+ const onSubmit= async() =>{
+  console.log('submit')
+  const newPost = {
+    category: post.value.category,
+    title: post.value.title,
+    detail: post.value.detail,
+    publisher: post.value.publisher
+  };
+  console.log(newPost)
+    const requestOptions = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title: "Vue POST Request Example" })
+    body: JSON.stringify( newPost )
   };
-  fetch("https://localhost:7177/api/Forum/Insert", requestOptions)
-    .then(response => response.json())
-    .then(data => (this.postId = data.id));
+  console.log(requestOptions)
+  const addpost = await fetch("https://localhost:7177/api/Forum/Insert", requestOptions)
+  const response = await addpost.json()
+  console.log(addpost)
+  console.log(response)
+  fetchData()
+  // TODO: 關閉modal
+  console.log(exampleModal.value)
+  exampleModal.value.style.display = 'none'
+  
 }
+
+
 
 // TODO: 刪除貼文
 async function deletePost(postId) {
     // Simple DELETE request with fetch
-    fetch('https://localhost:7177/api/Forum/Delete/'+postId, { method: 'DELETE' })
-    .then(() => this.status = 'Delete successful');
-  
+    const request =await fetch('https://localhost:7177/api/Forum/Delete/'+postId, { method: 'DELETE' })  
+    fetchData()
 }
 
 
 onMounted(async () => {
   await fetchData()
 })
+
 </script>
 
 <template>
@@ -66,10 +87,11 @@ onMounted(async () => {
         <div class="row g-3">
           <div class="col-auto">
             <select class="form-select" aria-label="Default select example">
-              <option value="1">國際</option>
-              <option value="2">娛樂</option>
-              <option value="3">商業</option>
-              <option selected value="4">全部</option>
+              <option selected value="0">全部</option>                
+              <option value="intl">國際</option>
+              <option value="ent">娛樂</option>
+              <option value="biz">商業</option>
+              <option value="tech">科技</option>              
             </select>
           </div>
           <div class="col-auto">
@@ -117,12 +139,12 @@ onMounted(async () => {
     id="exampleModal"
     tabindex="-1"
     aria-labelledby="exampleModalLabel"
-    aria-hidden="true"
+    :aria-hidden="modalHidden ? 'true' : 'false'"
   >
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">New message</h1>
+          <h1 class="modal-title fs-5" id="exampleModalLabel">新增貼文</h1>
           <button
             type="button"
             class="btn-close"
@@ -131,20 +153,33 @@ onMounted(async () => {
           ></button>
         </div>
         <div class="modal-body">
-          <form>
+          <form @submit.prevent="onSubmit">
             <div class="mb-3">
-              <label for="recipient-name" class="col-form-label">Recipient:</label>
-              <input type="text" class="form-control" id="recipient-name" />
+              <label for="selected" class="col-form-label">分類:</label>
+              <select v-model="post.category" class="form-select" aria-label="Default select example" required>                             
+              <option :value="'intl'">國際</option>
+              <option :value="'ent'">娛樂</option>
+              <option :value="'biz'">商業</option>
+              <option :value="'tech'">科技</option>
+            </select>
             </div>
             <div class="mb-3">
-              <label for="message-text" class="col-form-label">Message:</label>
-              <textarea class="form-control" id="message-text"></textarea>
+              <label for="title" class="col-form-label">標題:</label>
+              <input type="text" class="form-control" v-model="post.title" required/>
+            </div>
+            <div class="mb-3">
+              <label for="detail" class="col-form-label">內容:</label>
+              <textarea class="form-control" v-model="post.detail" required></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="publisher" class="col-form-label">發佈者:</label>
+              <input type="text" class="form-control" v-model="post.publisher" required />
             </div>
           </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary">Send message</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button @click="onSubmit" type="submit" class="btn btn-primary">新增</button>
         </div>
       </div>
     </div>
