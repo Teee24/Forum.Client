@@ -1,5 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Modal } from 'bootstrap'; 
 
 // TODO: 顯示貼文
 const response = ref([])
@@ -13,6 +15,7 @@ async function fetchData() {
 }
 
 
+
 //TODO: 新增貼文
 // 貼文欄位
 const post = ref({category:'',
@@ -22,17 +25,19 @@ postId:'',
 publisher:'',
 title:''})
 
+
 const exampleModal=ref(null)
+const modal = ref(null)
 
  const onSubmit= async() =>{
-  console.log('submit')
+
   const newPost = {
     category: post.value.category,
     title: post.value.title,
     detail: post.value.detail,
     publisher: post.value.publisher
   };
-  console.log(newPost)
+
     const requestOptions = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -41,12 +46,13 @@ const exampleModal=ref(null)
   console.log(requestOptions)
   const addpost = await fetch("https://localhost:7177/api/Forum/Insert", requestOptions)
   const response = await addpost.json()
-  console.log(addpost)
-  console.log(response)
+
+  // 刷新頁面
   fetchData()
+
   // TODO: 關閉modal
-  console.log(exampleModal.value)
-  exampleModal.value.style.display = 'none'
+
+  modal.value.hide();
   
 }
 
@@ -59,9 +65,13 @@ async function deletePost(postId) {
     fetchData()
 }
 
-
+// init 在setup之前
 onMounted(async () => {
   await fetchData()
+
+  // 先實例化
+  modal.value = new Modal(exampleModal.value);
+  console.log(modal)
 })
 
 </script>
@@ -88,10 +98,10 @@ onMounted(async () => {
           <div class="col-auto">
             <select class="form-select" aria-label="Default select example">
               <option selected value="0">全部</option>                
-              <option value="intl">國際</option>
-              <option value="ent">娛樂</option>
-              <option value="biz">商業</option>
-              <option value="tech">科技</option>              
+              <option value="國際">國際</option>
+              <option value="娛樂">娛樂</option>
+              <option value="商業">商業</option>
+              <option value="科技">科技</option>              
             </select>
           </div>
           <div class="col-auto">
@@ -139,7 +149,8 @@ onMounted(async () => {
     id="exampleModal"
     tabindex="-1"
     aria-labelledby="exampleModalLabel"
-    :aria-hidden="modalHidden ? 'true' : 'false'"
+    aria-hidden="true"
+    ref="exampleModal"
   >
     <div class="modal-dialog">
       <div class="modal-content">
@@ -157,10 +168,10 @@ onMounted(async () => {
             <div class="mb-3">
               <label for="selected" class="col-form-label">分類:</label>
               <select v-model="post.category" class="form-select" aria-label="Default select example" required>                             
-              <option :value="'intl'">國際</option>
-              <option :value="'ent'">娛樂</option>
-              <option :value="'biz'">商業</option>
-              <option :value="'tech'">科技</option>
+              <option :value="'國際'">國際</option>
+              <option :value="'娛樂'">娛樂</option>
+              <option :value="'商業'">商業</option>
+              <option :value="'科技'">科技</option>
             </select>
             </div>
             <div class="mb-3">
