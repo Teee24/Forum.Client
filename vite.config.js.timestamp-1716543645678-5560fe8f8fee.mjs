@@ -10,7 +10,8 @@ var vite_config_default = defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", __vite_injected_original_import_meta_url)),
-      "~bootstrap": fileURLToPath(new URL("./node_modules/bootstrap", __vite_injected_original_import_meta_url))
+      "~bootstrap": fileURLToPath(new URL("./node_modules/bootstrap", __vite_injected_original_import_meta_url)),
+      '~bootstrap-icons': fileURLToPath(new URL('./node_modules/bootstrap-icons', import.meta.url))
     }
   }
 });

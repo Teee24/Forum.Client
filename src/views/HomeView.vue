@@ -7,13 +7,18 @@ import { Modal } from 'bootstrap'
 const responseData = ref([])
 const allPost = ref([])
 
-async function fetchAllPost() {
-  const res = await fetch(`https://localhost:7177/api/Forum/Get`)
+async function fetchAllPost(category) {
+  let res
+  if (category !== '') {
+    res = await fetch(`https://localhost:7177/api/Forum/Get?category=` + category)
+  } else {
+    res = await fetch(`https://localhost:7177/api/Forum/Get`)
+  }
+
   const data = await res.json()
   responseData.value = data
   allPost.value = responseData.value['returnData']
 }
-
 
 // TODO: 新增貼文
 
@@ -48,12 +53,11 @@ const addPost = async () => {
   const addresponse = await addpost.json()
 
   // 刷新頁面
-  fetchAllPost()
+  fetchAllPost('')
 
   // 關閉modal
   addmodal.value.hide()
 }
-
 
 // TODO: 修改貼文
 const modifyModal = ref(null)
@@ -89,12 +93,11 @@ const modifyPost = async () => {
   const updateresult = afterupdate['returnMessage']
 
   // 刷新頁面
-  fetchAllPost()
+  fetchAllPost('')
 
   // 關閉modal
   modifymodal.value.hide()
 }
-
 
 // TODO: 刪除貼文
 const deletePost = async (postId) => {
@@ -102,13 +105,12 @@ const deletePost = async (postId) => {
     method: 'DELETE'
   })
 
-  fetchAllPost()
+  fetchAllPost('')
 }
-
 
 // init 在setup之前
 onMounted(async () => {
-  await fetchAllPost()
+  await fetchAllPost('')
 
   // 先實例化
   addmodal.value = new Modal(createModal.value)
@@ -121,36 +123,32 @@ onMounted(async () => {
   <div class="container-xxl">
     <!-- 上 -->
     <div class="row g-3">
-      <div class="col-auto">
-        <button
-          type="button"
-          class="btn btn-primary"
-          data-bs-toggle="modal"
-          data-bs-target="#createModal"
-          data-bs-whatever="@fat"
-        >
-          新增貼文
-        </button>
-      </div>
-      <div class="col-auto ms-auto">
-        <div class="row g-3">
-          <div class="col-auto">
-            <select class="form-select" aria-label="Default select example">
-              <option selected value="0">全部</option>
-              <option value="國際">國際</option>
-              <option value="娛樂">娛樂</option>
-              <option value="商業">商業</option>
-              <option value="科技">科技</option>
-            </select>
-          </div>
-          <div class="col-auto">
-            <button type="button" class="btn btn-primary">查詢</button>
-          </div>
-        </div>
-      </div>
-    </div>
+      
 
-    <hr />
+      <ul class="nav nav-underline nav-fill">
+        <li class="nav-item">
+          <a class="nav-link " data-bs-toggle="modal"
+          data-bs-target="#createModal"
+          data-bs-whatever="@fat" href="#"  title="新增貼文"><i class="bi bi-plus-lg"></i></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" aria-current="page" @click="fetchAllPost('')"  href="#">全部</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" @click="fetchAllPost('國際')" href="#">國際</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" @click="fetchAllPost('科技')" href="#">科技</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" @click="fetchAllPost('商業')" href="#">商業</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" @click="fetchAllPost('娛樂')" href="#">娛樂</a>
+        </li>
+      </ul>
+    </div>
+    <br />
     <!-- 中 -->
     <div class="list-group list-group-flush" v-for="(dataitem, index) in allPost" :key="index">
       <a href="#" class="list-group-item list-group-item-action" aria-current="true">
@@ -174,10 +172,10 @@ onMounted(async () => {
               data-bs-target="#modifyModal"
               data-bs-whatever="@fat"
             >
-              修改</button
+            <i class="bi bi-pen"></i> 修改</button
             >&nbsp;
             <button @click="deletePost(dataitem['postId'])" type="button" class="btn btn-info">
-              刪除
+              <i class="bi bi-trash3"></i> 刪除
             </button>
           </div>
         </div>
@@ -301,5 +299,6 @@ onMounted(async () => {
 <style scoped>
 .list-group-item {
   background-color: rgb(225, 241, 247);
+  border-radius: 5px;
 }
 </style>
