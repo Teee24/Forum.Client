@@ -3,104 +3,116 @@ import { ref, onMounted, computed } from 'vue'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { Modal } from 'bootstrap'
 
-// TODO: 顯示貼文
-const response = ref([])
-const allData = ref([])
-async function fetchData() {
+// TODO: 顯示所有貼文
+const responseData = ref([])
+const allPost = ref([])
+
+async function fetchAllPost() {
   const res = await fetch(`https://localhost:7177/api/Forum/Get`)
   const data = await res.json()
-  response.value = data
-  allData.value = response.value['returnData']
+  responseData.value = data
+  allPost.value = responseData.value['returnData']
 }
 
-//TODO: 新增貼文
+
+// TODO: 新增貼文
+
 // 貼文欄位
-const post = ref({ category: '', detail: '', postDate: '', postId: '', publisher: '', title: '' })
+const newPost = ref({
+  category: '',
+  detail: '',
+  postDate: '',
+  postId: '',
+  publisher: '',
+  title: ''
+})
 
-const exampleModal = ref(null)
-const modal = ref(null)
+const createModal = ref(null)
+const addmodal = ref(null)
 
-const onSubmit = async () => {
-  const newPost = {
-    category: post.value.category,
-    title: post.value.title,
-    detail: post.value.detail,
-    publisher: post.value.publisher
+const addPost = async () => {
+  const postToAdd = {
+    category: newPost.value.category,
+    title: newPost.value.title,
+    detail: newPost.value.detail,
+    publisher: newPost.value.publisher
   }
 
   const requestOptions = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(newPost)
+    body: JSON.stringify(postToAdd)
   }
-  console.log(requestOptions)
+
   const addpost = await fetch('https://localhost:7177/api/Forum/Insert', requestOptions)
-  const response = await addpost.json()
+  const addresponse = await addpost.json()
 
   // 刷新頁面
-  fetchData()
+  fetchAllPost()
 
-  // TODO: 關閉modal
-  modal.value.hide()
+  // 關閉modal
+  addmodal.value.hide()
 }
+
 
 // TODO: 修改貼文
 const modifyModal = ref(null)
+const modifymodal = ref(null)
+
 // 先拿到單筆資料
-const postinfo = ref([])
-async function fetchPost(postId) {
+const updatePost = ref([])
+
+const fetchPost = async (postId) => {
   const data = await fetch(`https://localhost:7177/api/Forum/GetById/` + postId)
   const originpost = await data.json()
-  postinfo.value = originpost['returnData']
-  console.log(postinfo.value)
+  updatePost.value = originpost['returnData']
 }
 
 // 修改的資料
-const  modifyPost=async(postId) =>{
-
-  console.log(postId)
-  const updatepost = {
-    category: postinfo.value.category,
-    title: postinfo.value.title,
-    detail: postinfo.value.detail,
-    publisher: postinfo.value.publisher,
-    postId:postinfo.value.postId
+const modifyPost = async () => {
+  const postToUpdate = {
+    category: updatePost.value.category,
+    title: updatePost.value.title,
+    detail: updatePost.value.detail,
+    publisher: updatePost.value.publisher,
+    postId: updatePost.value.postId
   }
 
-  console.log(updatepost)
   const requestOption = {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updatepost)
+    body: JSON.stringify(postToUpdate)
   }
-  console.log(requestOption)
-  const updatedata = await fetch(`https://localhost:7177/api/Forum/Update`,requestOption)
-  const afterupdate = await updatedata.json()
-  const result = afterupdate['returnMessage']
-  console.log(result)
-    // 刷新頁面
-    fetchData()
-    // TODO: 關閉modal
-    modal.value.hide()
+
+  const updatepost = await fetch(`https://localhost:7177/api/Forum/Update`, requestOption)
+  const afterupdate = await updatepost.json()
+  const updateresult = afterupdate['returnMessage']
+
+  // 刷新頁面
+  fetchAllPost()
+
+  // 關閉modal
+  modifymodal.value.hide()
 }
+
 
 // TODO: 刪除貼文
 const deletePost = async (postId) => {
-  // Simple DELETE request with fetch
   const request = await fetch('https://localhost:7177/api/Forum/Delete/' + postId, {
     method: 'DELETE'
   })
-  fetchData()
+
+  fetchAllPost()
 }
+
 
 // init 在setup之前
 onMounted(async () => {
-  await fetchData()
+  await fetchAllPost()
 
   // 先實例化
-  modal.value = new Modal(exampleModal.value)
-    modal.value = new Modal(modifyModal.value)
-  console.log(modal)
+  addmodal.value = new Modal(createModal.value)
+  modifymodal.value = new Modal(modifyModal.value)
 })
 </script>
 
@@ -114,7 +126,7 @@ onMounted(async () => {
           type="button"
           class="btn btn-primary"
           data-bs-toggle="modal"
-          data-bs-target="#exampleModal"
+          data-bs-target="#createModal"
           data-bs-whatever="@fat"
         >
           新增貼文
@@ -140,60 +152,54 @@ onMounted(async () => {
 
     <hr />
     <!-- 中 -->
-    <table class="table table-hover">
-      <thead>
-        <tr class="table-primary text-center">
-          <!--流水號postId -->
-          <th>編號</th>
-          <th>分類</th>
-          <th>標題</th>
-          <th>內容</th>
-          <th>發佈時間</th>
-          <th>發佈者</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="text-center" v-for="(dataitem, index) in allData" :key="index">
-          <td>{{ index + 1 }}</td>
-          <td>{{ dataitem['category'] }}</td>
-          <td>{{ dataitem['title'] }}</td>
-          <td>{{ dataitem['detail'] }}</td>
-          <td>{{ dataitem['postDate'] }}</td>
-          <td>{{ dataitem['publisher'] }}</td>
-          <td>
+    <div class="list-group list-group-flush" v-for="(dataitem, index) in allPost" :key="index">
+      <a href="#" class="list-group-item list-group-item-action" aria-current="true">
+        <div class="d-flex w-100 justify-content-between">
+          <p class="mb-1">{{ dataitem['publisher'] }}</p>
+          <small>{{ dataitem['postDate'] }}</small>
+        </div>
+        <h5 class="mb-1">{{ dataitem['title'] }}</h5>
+        <small>{{ dataitem['detail'] }}</small>
+        <br />
+        <div class="row">
+          <div class="col-6">
+            <p class="badge rounded-pill bg-secondary">{{ dataitem['category'] }}</p>
+          </div>
+          <div class="col-6 d-flex justify-content-end">
             <button
               @click="fetchPost(dataitem['postId'])"
               type="button"
-              class="btn btn-info mr-3 mb-2"
+              class="btn btn-info"
               data-bs-toggle="modal"
               data-bs-target="#modifyModal"
               data-bs-whatever="@fat"
             >
-              修改
-            </button>
+              修改</button
+            >&nbsp;
             <button @click="deletePost(dataitem['postId'])" type="button" class="btn btn-info">
               刪除
             </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          </div>
+        </div>
+      </a>
+      <hr />
+    </div>
   </div>
+
   <!--TODO:新增貼文-->
   <!--新增貼文Modal-->
   <div
     class="modal fade"
-    id="exampleModal"
+    id="createModal"
     tabindex="-1"
-    aria-labelledby="exampleModalLabel"
+    aria-labelledby="createModalLabel"
     aria-hidden="true"
-    ref="exampleModal"
+    ref="createModal"
   >
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">新增貼文</h1>
+          <h1 class="modal-title fs-5" id="createModalLabel">新增貼文</h1>
           <button
             type="button"
             class="btn-close"
@@ -202,11 +208,11 @@ onMounted(async () => {
           ></button>
         </div>
         <div class="modal-body">
-          <form @submit.prevent="onSubmit">
+          <form @submit.prevent="addPost">
             <div class="mb-3">
               <label for="selected" class="col-form-label">分類:</label>
               <select
-                v-model="post.category"
+                v-model="newPost.category"
                 class="form-select"
                 aria-label="Default select example"
                 required
@@ -219,21 +225,21 @@ onMounted(async () => {
             </div>
             <div class="mb-3">
               <label for="title" class="col-form-label">標題:</label>
-              <input type="text" class="form-control" v-model="post.title" required />
+              <input type="text" class="form-control" v-model="newPost.title" required />
             </div>
             <div class="mb-3">
               <label for="detail" class="col-form-label">內容:</label>
-              <textarea class="form-control" v-model="post.detail" required></textarea>
+              <textarea class="form-control" v-model="newPost.detail" required></textarea>
             </div>
             <div class="mb-3">
               <label for="publisher" class="col-form-label">發佈者:</label>
-              <input type="text" class="form-control" v-model="post.publisher" required />
+              <input type="text" class="form-control" v-model="newPost.publisher" required />
             </div>
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-          <button @click="onSubmit" type="submit" class="btn btn-primary">新增</button>
+          <button @click="addPost" type="submit" class="btn btn-primary">新增</button>
         </div>
       </div>
     </div>
@@ -261,32 +267,39 @@ onMounted(async () => {
           ></button>
         </div>
         <div class="modal-body">
-          <form @submit.prevent="onSubmit">
+          <form @submit.prevent="addPost">
             <div class="mb-3">
               <label for="selected" class="col-form-label">分類:</label>
               &nbsp;
-              <span class="badge text-bg-info">{{ postinfo.category }}</span>
-              <span style="display:none;">{{ postinfo.postId }}</span>
+              <span class="badge text-bg-info">{{ updatePost.category }}</span>
+              <span style="display: none">{{ updatePost.postId }}</span>
             </div>
             <div class="mb-3">
               <label for="title" class="col-form-label">標題:</label>
-              <input type="text" class="form-control" v-model="postinfo.title" required />
+              <input type="text" class="form-control" v-model="updatePost.title" required />
             </div>
             <div class="mb-3">
               <label for="detail" class="col-form-label">內容:</label>
-              <textarea class="form-control" v-model="postinfo.detail" required></textarea>
+              <textarea class="form-control" v-model="updatePost.detail" required></textarea>
             </div>
             <div class="mb-3">
               <label for="publisher" class="col-form-label">發佈者:</label>
-              <input type="text" class="form-control" v-model="postinfo.publisher" required />
+              <input type="text" class="form-control" v-model="updatePost.publisher" required />
             </div>
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-          <button @click="modifyPost(postinfo.postId)" type="submit" class="btn btn-primary">儲存</button>
+          <button @click="modifyPost(updatePost.postId)" type="submit" class="btn btn-primary">
+            儲存
+          </button>
         </div>
       </div>
     </div>
   </div>
 </template>
+<style scoped>
+.list-group-item {
+  background-color: rgb(225, 241, 247);
+}
+</style>
