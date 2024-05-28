@@ -8,9 +8,11 @@ const responseData = ref([])
 const allPost = ref([])
 
 async function fetchAllPost(category) {
+
   let res
-  if (category !== '') {
+  if (category) {
     res = await fetch(`https://localhost:7177/api/Forum/Get?category=` + category)
+
   } else {
     res = await fetch(`https://localhost:7177/api/Forum/Get`)
   }
