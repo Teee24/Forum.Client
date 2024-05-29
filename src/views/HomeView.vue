@@ -4,22 +4,18 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import { Modal } from 'bootstrap'
 
 // TODO: 顯示所有貼文
-const responseData = ref([])
+
 const allPost = ref([])
 
-async function fetchAllPost(category) {
+async function fetchAllPost(category=null) {
 
-  let res
-  if (category) {
-    res = await fetch(`https://localhost:7177/api/Forum/Get?category=` + category)
+  let url = category? `https://localhost:7177/api/Forum/Get?category=${category}`:`https://localhost:7177/api/Forum/Get`
 
-  } else {
-    res = await fetch(`https://localhost:7177/api/Forum/Get`)
-  }
+  let res =await fetch(url)
 
   const data = await res.json()
-  responseData.value = data
-  allPost.value = responseData.value['returnData']
+  
+  allPost.value = data['returnData']
 }
 
 // TODO: 新增貼文
@@ -52,26 +48,33 @@ const addPost = async () => {
   }
 
   const addpost = await fetch('https://localhost:7177/api/Forum/Insert', requestOptions)
-  const addresponse = await addpost.json()
+
+  // TODO: try cath 調整中
+  try {
+    const addresponse = await addpost.json()
+  }catch(ex){
+console.error(ex)
+  }
+  
 
   // 刷新頁面
-  fetchAllPost('')
+  fetchAllPost()
 
   // 關閉modal
   addmodal.value.hide()
 }
 
 // TODO: 修改貼文
-const modifyModal = ref(null)
-const modifymodal = ref(null)
+const modifyModalRef = ref(null)
+const modifyModalInstance = ref(null)
 
 // 先拿到單筆資料
 const updatePost = ref([])
 
 const fetchPost = async (postId) => {
-  const data = await fetch(`https://localhost:7177/api/Forum/GetById/` + postId)
-  const originpost = await data.json()
-  updatePost.value = originpost['returnData']
+  const data = await fetch(`https://localhost:7177/api/Forum/GetById/${postId}`)
+  const displayPost = await data.json()
+  updatePost.value = displayPost['returnData']
 }
 
 // 修改的資料
@@ -95,28 +98,28 @@ const modifyPost = async () => {
   const updateresult = afterupdate['returnMessage']
 
   // 刷新頁面
-  fetchAllPost('')
+  fetchAllPost()
 
   // 關閉modal
-  modifymodal.value.hide()
+  modifyModalInstance.value.hide()
 }
 
 // TODO: 刪除貼文
 const deletePost = async (postId) => {
-  const request = await fetch('https://localhost:7177/api/Forum/Delete/' + postId, {
+  const request = await fetch(`https://localhost:7177/api/Forum/Delete/${postId}`, {
     method: 'DELETE'
   })
 
-  fetchAllPost('')
+  fetchAllPost()
 }
 
 // init 在setup之前
 onMounted(async () => {
-  await fetchAllPost('')
+  await fetchAllPost()
 
   // 先實例化
   addmodal.value = new Modal(createModal.value)
-  modifymodal.value = new Modal(modifyModal.value)
+  modifyModalInstance.value = new Modal(modifyModalRef.value)
 })
 </script>
 
@@ -134,7 +137,7 @@ onMounted(async () => {
           data-bs-whatever="@fat" href="#"  title="新增貼文"><i class="bi bi-plus-lg"></i></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" aria-current="page" @click="fetchAllPost('')"  href="#">全部</a>
+          <a class="nav-link" aria-current="page" @click="fetchAllPost()"  href="#">全部</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" @click="fetchAllPost('國際')" href="#">國際</a>
@@ -152,7 +155,7 @@ onMounted(async () => {
     </div>
     <br />
     <!-- 中 -->
-    <div class="list-group list-group-flush" v-for="(dataitem, index) in allPost" :key="index">
+    <div class="list-group list-group-flush" v-for="dataitem in allPost" :key="dataitem['postId']">
       <a href="#" class="list-group-item list-group-item-action" aria-current="true">
         <div class="d-flex w-100 justify-content-between">
           <p class="mb-1">{{ dataitem['publisher'] }}</p>
@@ -253,7 +256,7 @@ onMounted(async () => {
     tabindex="-1"
     aria-labelledby="modifyModalLabel"
     aria-hidden="true"
-    ref="modifyModal"
+    ref="modifyModalRef"
   >
     <div class="modal-dialog">
       <div class="modal-content">
