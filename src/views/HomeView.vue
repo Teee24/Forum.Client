@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { Modal } from 'bootstrap'
+import { forumInstance } from '@/utils/forumInstance';
 
 // TODO: 顯示所有貼文
 
@@ -9,7 +10,9 @@ const allPost = ref([])
 
 async function fetchAllPost(category=null) {
 
-  let url = category? `https://localhost/api/Forum/Get?category=${category}`:`https://localhost/api/Forum/Get`
+  console.log(forumInstance)
+
+  let url = category? `${forumInstance}/api/Forum/Get?category=${category}`:`${forumInstance}/api/Forum/Get`
 
   let res =await fetch(url)
 
@@ -33,6 +36,7 @@ const newPost = ref({
 const createModal = ref(null)
 const addmodal = ref(null)
 
+try {
 const addPost = async () => {
   const postToAdd = {
     category: newPost.value.category,
@@ -48,21 +52,27 @@ const addPost = async () => {
   }
 
   const addpost = await fetch('https://localhost/api/Forum/Insert', requestOptions)
+  //  const addresponse = await addpost.json()
+  const { returnCode, returnMessage } = addpost.data;
 
-  // TODO: try cath 調整中
-  try {
-    const addresponse = await addpost.json()
-  }catch(ex){
-console.error(ex)
-  }
-  
+  alert(returnMessage)
 
   // 刷新頁面
   fetchAllPost()
 
   // 關閉modal
   addmodal.value.hide()
-}
+
+  
+  
+   
+  }}catch(error){
+    console.error('新增失敗',error);
+    alert('意外狀況');
+  }
+  
+
+
 
 // TODO: 修改貼文
 const modifyModalRef = ref(null)

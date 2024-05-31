@@ -1,10 +1,15 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({command, mode})=>{
+  const env = loadEnv(mode, process.cwd(), '');
+  const vite_env = env.VITE_ENV;
+  console.log(vite_env)
+  //console.log(env)
+return{
   plugins: [
     vue(),
   ],
@@ -14,4 +19,4 @@ export default defineConfig({
       '~bootstrap': fileURLToPath(new URL('./node_modules/bootstrap', import.meta.url))
     }
   }
-})
+}})
