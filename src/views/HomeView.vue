@@ -9,7 +9,7 @@ const allPost = ref([])
 
 async function fetchAllPost(category=null) {
 
-  let url = category? `https://localhost:7177/api/Forum/Get?category=${category}`:`https://localhost:7177/api/Forum/Get`
+  let url = category? `https://localhost/api/Forum/Get?category=${category}`:`https://localhost/api/Forum/Get`
 
   let res =await fetch(url)
 
@@ -47,7 +47,7 @@ const addPost = async () => {
     body: JSON.stringify(postToAdd)
   }
 
-  const addpost = await fetch('https://localhost:7177/api/Forum/Insert', requestOptions)
+  const addpost = await fetch('https://localhost/api/Forum/Insert', requestOptions)
 
   // TODO: try cath 調整中
   try {
@@ -72,7 +72,7 @@ const modifyModalInstance = ref(null)
 const updatePost = ref([])
 
 const fetchPost = async (postId) => {
-  const data = await fetch(`https://localhost:7177/api/Forum/GetById/${postId}`)
+  const data = await fetch(`https://localhost/api/Forum/GetById/${postId}`)
   const displayPost = await data.json()
   updatePost.value = displayPost['returnData']
 }
@@ -93,7 +93,7 @@ const modifyPost = async () => {
     body: JSON.stringify(postToUpdate)
   }
 
-  const updatepost = await fetch(`https://localhost:7177/api/Forum/Update`, requestOption)
+  const updatepost = await fetch(`https://localhost/api/Forum/Update`, requestOption)
   const afterupdate = await updatepost.json()
   const updateresult = afterupdate['returnMessage']
 
@@ -106,7 +106,7 @@ const modifyPost = async () => {
 
 // TODO: 刪除貼文
 const deletePost = async (postId) => {
-  const request = await fetch(`https://localhost:7177/api/Forum/Delete/${postId}`, {
+  const request = await fetch(`https://localhost/api/Forum/Delete/${postId}`, {
     method: 'DELETE'
   })
 
